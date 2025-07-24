@@ -17,7 +17,9 @@ import { login } from "../../http/api";
 
 const loginUser = async (credentials: Credentials) => {
   // server call logic
-  await login(credentials);
+  const { data } = await login(credentials);
+
+  return data;
 };
 
 const LoginPage = () => {
@@ -29,9 +31,6 @@ const LoginPage = () => {
     },
   });
 
-  if (isError) {
-    console.log(error, "erroor");
-  }
   return (
     <>
       <Layout
