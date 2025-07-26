@@ -10,3 +10,7 @@ export const login = (credentials: Credentials) => {
 export const self = () => {
   return api.get("/auth/self");
 };
+
+export const logout = () => {
+  return api.post("/auth/logout");
+};
