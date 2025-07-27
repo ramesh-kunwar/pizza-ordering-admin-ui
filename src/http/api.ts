@@ -18,3 +18,7 @@ export const logout = () => {
 export const getUsers = () => {
   return api.get("/users");
 };
+
+export const getTenants = () => {
+  return api.get("/tenants");
+};

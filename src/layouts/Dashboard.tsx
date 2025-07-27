@@ -55,6 +55,11 @@ const getMenuItems = (role: string) => {
 
       label: <NavLink to="/users">Users</NavLink>,
     });
+    menus.splice(2, 0, {
+      key: "/restaurants",
+      icon: <Icon component={FoodIcon} />,
+      label: <NavLink to="/restaurants">Restaurants</NavLink>,
+    });
     return menus;
   }
   return baseItems;
