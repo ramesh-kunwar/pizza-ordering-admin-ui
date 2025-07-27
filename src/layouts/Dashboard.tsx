@@ -22,36 +22,43 @@ import GiftIcon from "../components/icons/GiftIcon";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "../http/api";
 
-const items = [
-  {
-    key: "/",
-    icon: <Icon component={Home} />,
-    label: <NavLink to="/">Home</NavLink>,
-  },
+const getMenuItems = (role: string) => {
+  const baseItems = [
+    {
+      key: "/",
+      icon: <Icon component={Home} />,
+      label: <NavLink to="/">Home</NavLink>,
+    },
 
-  {
-    key: "/users",
-    icon: <UserOutlined />,
+    {
+      key: "/products",
+      icon: <Icon component={FoodIcon} />,
+      label: <NavLink to="/products">Products</NavLink>,
+    },
+    {
+      key: "/orders",
+      icon: <Icon component={BasketIcon} />,
+      label: <NavLink to="/orders">Orders</NavLink>,
+    },
+    {
+      key: "/promos",
+      icon: <Icon component={GiftIcon} />,
+      label: <NavLink to="/promos">Promos</NavLink>,
+    },
+  ];
 
-    label: <NavLink to="/users">Users</NavLink>,
-  },
+  if (role === "admin") {
+    const menus = [...baseItems];
+    menus.splice(1, 0, {
+      key: "/users",
+      icon: <UserOutlined />,
 
-  {
-    key: "/products",
-    icon: <Icon component={FoodIcon} />,
-    label: <NavLink to="/products">Products</NavLink>,
-  },
-  {
-    key: "/orders",
-    icon: <Icon component={BasketIcon} />,
-    label: <NavLink to="/orders">Orders</NavLink>,
-  },
-  {
-    key: "/promos",
-    icon: <Icon component={GiftIcon} />,
-    label: <NavLink to="/promos">Promos</NavLink>,
-  },
-];
+      label: <NavLink to="/users">Users</NavLink>,
+    });
+    return menus;
+  }
+  return baseItems;
+};
 
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -67,10 +74,12 @@ const Dashboard = () => {
   });
 
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
 
   const { user } = useAuthStore();
+
+  const items = getMenuItems(user?.role as string);
 
   if (user === null) {
     return <Navigate to="/auth/login" replace={true} />;
