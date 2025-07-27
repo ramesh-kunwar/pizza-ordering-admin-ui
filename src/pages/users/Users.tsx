@@ -1,6 +1,6 @@
 import { PlusOutlined, RightOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Breadcrumb, Button, Drawer, Space, Table } from "antd";
+import { Breadcrumb, Button, Drawer, Form, Space, Table, theme } from "antd";
 
 import { Link, Navigate } from "react-router-dom";
 import { getUsers } from "../../http/api";
@@ -8,6 +8,7 @@ import type { User } from "../../types";
 import { useAuthStore } from "../../store";
 import UserFilter from "./UsersFilter";
 import { useState } from "react";
+import UserForm from "./forms/UserForm";
 
 const columns = [
   {
@@ -51,6 +52,10 @@ export const Users = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { user } = useAuthStore();
+
+  const {
+    token: { colorBgLayout },
+  } = theme.useToken();
 
   const {
     data: users,
@@ -98,6 +103,7 @@ export const Users = () => {
         <Drawer
           title="Create user"
           width={720}
+          styles={{ body: { backgroundColor: colorBgLayout } }}
           destroyOnClose={true}
           open={drawerOpen}
           onClose={() => {
@@ -111,8 +117,9 @@ export const Users = () => {
             </Space>
           }
         >
-          <p>Some contents...</p>
-          <p>Some contents...</p>
+          <Form layout="vertical">
+            <UserForm />
+          </Form>
         </Drawer>
       </Space>
     </>
