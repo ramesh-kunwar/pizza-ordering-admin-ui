@@ -2,7 +2,7 @@ import { RightOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Breadcrumb, Space, Table } from "antd";
 
-import { createRoutesFromElements, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getUsers } from "../../http/api";
 import type { User } from "../../types";
 
