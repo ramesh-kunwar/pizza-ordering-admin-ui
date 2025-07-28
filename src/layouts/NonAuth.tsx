@@ -1,4 +1,3 @@
-import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store";
 
@@ -10,8 +9,6 @@ const NonAuth = () => {
 
   return (
     <div>
-      <h1>No Auth component</h1>
-
       <Outlet />
     </div>
   );
