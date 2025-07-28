@@ -27,9 +27,10 @@ import { createUser, getUsers } from "../../http/api";
 import type { CreateUserData, FieldData, User } from "../../types";
 import { useAuthStore } from "../../store";
 import UserFilter from "./UsersFilter";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import UserForm from "./forms/UserForm";
 import { PER_PAGE } from "../../constants";
+import { debounce } from "lodash";
 
 const columns = [
   {
@@ -118,25 +119,29 @@ export const Users = () => {
       return;
     },
   });
-  if (user?.role !== "admin") {
-    return <Navigate to="/auth/login" replace={true} />;
-  }
+
+  const debouncedQUpdate = useMemo(() => {
+    return debounce((value: string | undefined) => {
+      setQueryParams((prev) => ({ ...prev, q: value, currentPage: 1 }));
+    }, 500);
+  }, []);
 
   const onFilterChange = (changedFields: FieldData[]) => {
     const changedFilterFields = changedFields
-      .map((item) => {
-        return {
-          [item.name[0]]: item.value,
-        };
-      })
+      .map((item) => ({
+        [item.name[0]]: item.value,
+      }))
       .reduce((acc, item) => ({ ...acc, ...item }), {});
 
-    setQueryParams((prev) => {
-      return {
+    if ("q" in changedFilterFields) {
+      debouncedQUpdate(changedFilterFields.q);
+    } else {
+      setQueryParams((prev) => ({
         ...prev,
         ...changedFilterFields,
-      };
-    });
+        currentPage: 1,
+      }));
+    }
   };
 
   const onHandleSubmit = async () => {
@@ -147,6 +152,9 @@ export const Users = () => {
     setDrawerOpen(false);
   };
 
+  if (user?.role !== "admin") {
+    return <Navigate to="/auth/login" replace={true} />;
+  }
   return (
     <>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
