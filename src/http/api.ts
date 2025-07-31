@@ -35,3 +35,6 @@ export const createTenant = (tenant: CreateTenantData) => {
 };
 
 // Catalog Service
+export const getCategories = () => {
+  return api.get(`${CATALOG_SERVICE}/categories`);
+};
