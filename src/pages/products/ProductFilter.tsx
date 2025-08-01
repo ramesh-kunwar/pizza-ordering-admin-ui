@@ -2,12 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, Col, Form, Input, Row, Select, Space, Switch } from "antd";
 import { getCategories, getTenants } from "../../http/api";
 import type { Category, Tenant } from "../../types";
+import { useAuthStore } from "../../store";
 
 type ProductsFilterProps = {
   children?: React.ReactNode;
 };
 
 const ProductsFilter = ({ children }: ProductsFilterProps) => {
+  const { user } = useAuthStore();
   const { data: restaurants } = useQuery({
     queryKey: ["restaurants"],
     queryFn: () => {
@@ -40,9 +42,6 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
                   allowClear={true}
                   placeholder="Select category"
                 >
-                  {/* <Select.Option value="pizza">Pizza</Select.Option>
-                  <Select.Option value="beverages">Beverages</Select.Option> */}
-
                   {categories?.map((category: Category) => (
                     <Select.Option key={category._id} value={category._id}>
                       {category.name}
@@ -52,23 +51,23 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
               </Form.Item>
             </Col>
 
-            <Col span={6}>
-              <Form.Item name="tenantId">
-                <Select
-                  style={{ width: "100%" }}
-                  allowClear={true}
-                  placeholder="Select restaurant"
-                >
-                  {/* <Select.Option value="pizza">Pizza hub</Select.Option>
-                  <Select.Option value="beverages">Softy corner</Select.Option> */}
-                  {restaurants?.data?.map((restaurant: Tenant) => (
-                    <Select.Option key={restaurant.id} value={restaurant.id}>
-                      {restaurant.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
+            {user!.role === "admin" && (
+              <Col span={6}>
+                <Form.Item name="tenantId">
+                  <Select
+                    style={{ width: "100%" }}
+                    allowClear={true}
+                    placeholder="Select restaurant"
+                  >
+                    {restaurants?.data?.map((restaurant: Tenant) => (
+                      <Select.Option key={restaurant.id} value={restaurant.id}>
+                        {restaurant.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            )}
 
             <Col span={6}>
               <Space>

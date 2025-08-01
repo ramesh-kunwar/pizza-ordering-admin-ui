@@ -19,6 +19,7 @@ import { getProducts } from "../../http/api";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { debounce } from "lodash";
+import { useAuthStore } from "../../store";
 
 const columns = [
   {
@@ -72,11 +73,14 @@ const columns = [
 ];
 
 const Products = () => {
+  const { user } = useAuthStore();
+
   const [filterForm] = Form.useForm();
 
   const [queryParams, setQueryParams] = useState({
     limit: PER_PAGE,
     page: 1,
+    tenantId: user!.role === "manager" ? user?.tenant.id : undefined,
   });
 
   const { data: products } = useQuery({
