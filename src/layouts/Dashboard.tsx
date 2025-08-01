@@ -19,6 +19,7 @@ import Home from "../components/icons/Home";
 import { FoodIcon } from "../components/icons/FoodIcon";
 import BasketIcon from "../components/icons/BasketIcon";
 import GiftIcon from "../components/icons/GiftIcon";
+import { BarChartIcon } from "../components/icons/BarChart";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "../http/api";
 
@@ -44,6 +45,11 @@ const getMenuItems = (role: string) => {
       key: "/promos",
       icon: <Icon component={GiftIcon} />,
       label: <NavLink to="/promos">Promos</NavLink>,
+    },
+    {
+      key: "/forecasting",
+      icon: <Icon component={BarChartIcon} />,
+      label: <NavLink to="/forecasting">Forecasting</NavLink>,
     },
   ];
 
