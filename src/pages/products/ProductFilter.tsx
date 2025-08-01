@@ -1,15 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  Card,
-  Col,
-  Form,
-  Input,
-  Row,
-  Select,
-  Space,
-  Switch,
-  Typography,
-} from "antd";
+import { Card, Col, Form, Input, Row, Select, Space, Switch } from "antd";
 import { getCategories, getTenants } from "../../http/api";
 import type { Category, Tenant } from "../../types";
 
@@ -32,8 +22,6 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
     },
   });
 
-  console.log(categories, " categories");
-  console.log(restaurants, " restaurants");
   return (
     <Card>
       <Row justify="space-between">
@@ -46,7 +34,7 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
             </Col>
 
             <Col span={6}>
-              <Form.Item name="category">
+              <Form.Item name="categoryId">
                 <Select
                   style={{ width: "100%" }}
                   allowClear={true}
@@ -65,7 +53,7 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
             </Col>
 
             <Col span={6}>
-              <Form.Item name="restaurant">
+              <Form.Item name="tenantId">
                 <Select
                   style={{ width: "100%" }}
                   allowClear={true}
@@ -84,8 +72,9 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
 
             <Col span={6}>
               <Space>
-                <Switch defaultChecked onChange={() => {}} />
-                <Typography.Text>Show only published</Typography.Text>
+                <Form.Item name="isPublish">
+                  <Switch defaultChecked={false} onChange={() => {}} />
+                </Form.Item>
               </Space>
             </Col>
           </Row>
