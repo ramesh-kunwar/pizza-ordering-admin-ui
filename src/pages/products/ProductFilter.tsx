@@ -1,5 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, Col, Form, Input, Row, Select, Space, Switch } from "antd";
+import {
+  Card,
+  Col,
+  Form,
+  Input,
+  Row,
+  Select,
+  Space,
+  Switch,
+  Typography,
+} from "antd";
 import { getCategories, getTenants } from "../../http/api";
 import type { Category, Tenant } from "../../types";
 import { useAuthStore } from "../../store";
@@ -74,6 +84,11 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
                 <Form.Item name="isPublish">
                   <Switch defaultChecked={false} onChange={() => {}} />
                 </Form.Item>
+                <Typography.Text
+                  style={{ marginBottom: "20px", display: "block" }}
+                >
+                  Show Only Published
+                </Typography.Text>
               </Space>
             </Col>
           </Row>
