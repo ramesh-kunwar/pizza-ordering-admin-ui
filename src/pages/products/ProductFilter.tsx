@@ -11,8 +11,9 @@ import {
   Typography,
 } from "antd";
 import { getCategories, getTenants } from "../../http/api";
-import type { Category, Tenant } from "../../types";
+
 import { useAuthStore } from "../../store";
+import type { Category } from "../../types";
 
 type ProductsFilterProps = {
   children?: React.ReactNode;
@@ -34,6 +35,8 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
     },
   });
 
+  // console.log(cat.data[0].name, " categories from filter");
+
   return (
     <Card>
       <Row justify="space-between">
@@ -52,11 +55,12 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
                   allowClear={true}
                   placeholder="Select category"
                 >
-                  {categories?.map((category: Category) => (
+                  {/* {categories?.map((category: Category) => (
                     <Select.Option key={category._id} value={category._id}>
                       {category.name}
                     </Select.Option>
-                  ))}
+                  ))} */}
+                  <Select.Option value="">All Categories</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -69,11 +73,12 @@ const ProductsFilter = ({ children }: ProductsFilterProps) => {
                     allowClear={true}
                     placeholder="Select restaurant"
                   >
-                    {restaurants?.data?.map((restaurant: Tenant) => (
+                    {/* {restaurants?.data?.map((restaurant: Tenant) => (
                       <Select.Option key={restaurant.id} value={restaurant.id}>
                         {restaurant.name}
                       </Select.Option>
-                    ))}
+                    ))} */}
+                    <Select.Option value="">All Restaurants</Select.Option>
                   </Select>
                 </Form.Item>
               </Col>
