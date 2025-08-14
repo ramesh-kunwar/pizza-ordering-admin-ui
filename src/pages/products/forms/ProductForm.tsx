@@ -8,20 +8,15 @@ import {
   Space,
   Switch,
   Typography,
-  Upload,
-  type UploadProps,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-// import { Category, Tenant } from "../../../types";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories, getTenants } from "../../../http/api";
 import type { Category, Tenant } from "../../../types";
 import Pricing from "./Pricing";
 import Attributes from "./Attributes";
-import { useState } from "react";
+import ProductImage from "./ProductImage";
 
 const ProductForm = () => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const selectedCategory = Form.useWatch("categoryId");
   console.log(selectedCategory, " selectedCategory from ProductForm");
   const { data: categories, isLoading: categoriesLoading } = useQuery({
@@ -37,16 +32,6 @@ const ProductForm = () => {
       return getTenants(`perPage=100&currentPage=1`);
     },
   });
-
-  const uploaderconfig: UploadProps = {
-    name: "file",
-    multiple: false,
-    showUploadList: false,
-    beforeUpload: (file) => {
-      setImageUrl(URL.createObjectURL(file));
-      return false;
-    },
-  };
 
   return (
     <Row>
@@ -122,35 +107,7 @@ const ProductForm = () => {
           <Card title="Product image" bordered={false}>
             <Row gutter={20}>
               <Col span={12}>
-                <Form.Item
-                  label=""
-                  name="image"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please upload a product image",
-                    },
-                  ]}
-                >
-                  <Upload listType="picture-card" {...uploaderconfig}>
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt="avatar"
-                        style={{ width: "100%" }}
-                      />
-                    ) : (
-                      <Space direction="vertical">
-                        <PlusOutlined />
-                        <Typography.Text>Upload</Typography.Text>
-                      </Space>
-                    )}
-                    {/* <Space direction="vertical">
-                      <PlusOutlined />
-                      <Typography.Text>Upload</Typography.Text>
-                    </Space> */}
-                  </Upload>
-                </Form.Item>
+                <ProductImage />
               </Col>
             </Row>
           </Card>
