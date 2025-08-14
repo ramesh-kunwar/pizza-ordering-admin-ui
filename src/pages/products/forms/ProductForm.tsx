@@ -9,6 +9,7 @@ import {
   Switch,
   Typography,
   Upload,
+  type UploadProps,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 // import { Category, Tenant } from "../../../types";
@@ -17,10 +18,10 @@ import { getCategories, getTenants } from "../../../http/api";
 import type { Category, Tenant } from "../../../types";
 import Pricing from "./Pricing";
 import Attributes from "./Attributes";
-// import Pricing from "./Pricing";
-// import Attributes from "./Attributes";
+import { useState } from "react";
 
 const ProductForm = () => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const selectedCategory = Form.useWatch("categoryId");
   console.log(selectedCategory, " selectedCategory from ProductForm");
   const { data: categories, isLoading: categoriesLoading } = useQuery({
@@ -36,6 +37,16 @@ const ProductForm = () => {
       return getTenants(`perPage=100&currentPage=1`);
     },
   });
+
+  const uploaderconfig: UploadProps = {
+    name: "file",
+    multiple: false,
+    showUploadList: false,
+    beforeUpload: (file) => {
+      setImageUrl(URL.createObjectURL(file));
+      return false;
+    },
+  };
 
   return (
     <Row>
@@ -121,11 +132,23 @@ const ProductForm = () => {
                     },
                   ]}
                 >
-                  <Upload listType="picture-card">
-                    <Space direction="vertical">
+                  <Upload listType="picture-card" {...uploaderconfig}>
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt="avatar"
+                        style={{ width: "100%" }}
+                      />
+                    ) : (
+                      <Space direction="vertical">
+                        <PlusOutlined />
+                        <Typography.Text>Upload</Typography.Text>
+                      </Space>
+                    )}
+                    {/* <Space direction="vertical">
                       <PlusOutlined />
                       <Typography.Text>Upload</Typography.Text>
-                    </Space>
+                    </Space> */}
                   </Upload>
                 </Form.Item>
               </Col>

@@ -48,6 +48,14 @@ export type Product = {
   isPublish?: boolean;
   createdAt: string;
 };
+export type ImageField = {
+  file: File;
+};
+export type CreateProductData = Product & {
+  image: {
+    file: ImageField;
+  };
+};
 
 export interface PriceConfiguration {
   [key: string]: {
