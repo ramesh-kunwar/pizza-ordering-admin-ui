@@ -168,7 +168,9 @@ const Dashboard = () => {
           <Content style={{ margin: "24px" }}>
             <Outlet />
           </Content>
-          <Footer style={{ textAlign: "center" }}>Mernspace pizza shop</Footer>
+          <Footer style={{ textAlign: "center" }}>
+            SliceX - Multi Tenant Pizza Ordering App
+          </Footer>
         </Layout>
       </Layout>
     </div>
