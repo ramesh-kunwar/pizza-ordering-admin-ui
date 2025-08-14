@@ -9,6 +9,7 @@ import { Users } from "./pages/users/Users";
 import Tenants from "./pages/tenants/Tenants";
 import Products from "./pages/products/Products";
 import ARIMAForecastingDashboard from "./pages/arima-forecasting/ARIMAForecastingDashboard";
+import ARIMAPythonForecastingDashboard from "./pages/arima-python-frontend";
 // import LSTMForecastingDashboard from "./pages/lstm-forecasting/LSTMForecastingDashboard";
 // import ExponentialSmoothingDashboard from "./pages/exponential-smoothening/ExponentialSmoothingDashboard";
 
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
           {
             path: "/forecasting",
             element: <ARIMAForecastingDashboard />,
+          },
+          {
+            path: "/arima-python-forecasting",
+            element: <ARIMAPythonForecastingDashboard />,
           },
           // {
           //   path: "/lstm-forecasting",
