@@ -284,17 +284,37 @@ export class DataProcessor {
       point.timestamp - timeSeries[index].timestamp
     );
 
-    const medianInterval = intervals.sort((a, b) => a - b)[Math.floor(intervals.length / 2)];
+    // Use median for robustness against outliers
+    const sortedIntervals = intervals.sort((a, b) => a - b);
+    const medianInterval = sortedIntervals[Math.floor(sortedIntervals.length / 2)];
 
     const hour = 1000 * 60 * 60;
     const day = hour * 24;
     const week = day * 7;
     const month = day * 30;
 
-    if (medianInterval <= hour * 2) return 'hourly';
-    if (medianInterval <= day * 2) return 'daily';
-    if (medianInterval <= week * 2) return 'weekly';
-    return 'monthly';
+    console.log(`📊 Time frequency analysis:`);
+    console.log(`  - Data points: ${timeSeries.length}`);
+    console.log(`  - Median interval: ${(medianInterval / day).toFixed(2)} days`);
+    console.log(`  - Min interval: ${(Math.min(...intervals) / day).toFixed(2)} days`);
+    console.log(`  - Max interval: ${(Math.max(...intervals) / day).toFixed(2)} days`);
+
+    let detectedFrequency: 'hourly' | 'daily' | 'weekly' | 'monthly';
+    
+    if (medianInterval <= hour * 2) {
+      detectedFrequency = 'hourly';
+    } else if (medianInterval <= day * 2) {
+      detectedFrequency = 'daily';
+    } else if (medianInterval <= week * 2) {
+      detectedFrequency = 'weekly';
+    } else {
+      detectedFrequency = 'monthly';
+    }
+
+    console.log(`  - Detected frequency: ${detectedFrequency}`);
+    console.log(`📊 ARIMA model will be trained on ${detectedFrequency} data`);
+    
+    return detectedFrequency;
   }
 
   static fillMissingValues(
