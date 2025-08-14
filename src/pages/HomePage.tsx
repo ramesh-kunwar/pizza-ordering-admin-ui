@@ -15,7 +15,7 @@ import { useAuthStore } from "../store";
 import { BarChartIcon } from "../components/icons/BarChart";
 import BasketIcon from "../components/icons/BasketIcon";
 import { Link } from "react-router-dom";
-// import { ComponentType } from 'react';
+import { ComponentType } from 'react';
 const { Title, Text } = Typography;
 
 const list = [
@@ -105,6 +105,26 @@ function HomePage() {
                 title={<CardTitle title="Sales" PrefixIcon={BarChartIcon} />}
                 bordered={false}
               ></Card>
+            </Col>
+            <Col span={24}>
+              <Card bordered={false} style={{ backgroundColor: '#f6ffed' }}>
+                <Title level={5} style={{ color: '#52c41a', marginBottom: 16 }}>
+                  🚀 Advanced Forecasting
+                </Title>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text>Predict pizza sales using cutting-edge AI models:</Text>
+                  <Space>
+                    <Button type="primary">
+                      <Link to="/forecasting">ARIMA Forecasting</Link>
+                    </Button>
+                    <Button type="primary" style={{ backgroundColor: '#722ed1', borderColor: '#722ed1' }}>
+                      <Link to="/lstm-forecasting" style={{ color: 'white' }}>
+                        🧠 LSTM Neural Network
+                      </Link>
+                    </Button>
+                  </Space>
+                </Space>
+              </Card>
             </Col>
           </Row>
         </Col>
