@@ -249,9 +249,12 @@ const ARIMAForecastingDashboard: React.FC = () => {
             recentValues.reduce((sum, val) => sum + val, 0) /
             recentValues.length;
 
+          // Get forecast horizon from trained model or default to 30
+          const forecastHorizon = trainedModel.params?.forecastHorizon || 30;
+          
           // Generate predictions with mean reversion for stationary data
           const predictions: number[] = [];
-          for (let i = 1; i <= 30; i++) {
+          for (let i = 1; i <= forecastHorizon; i++) {
             const meanReversionFactor = Math.min(0.95, 0.7 + i * 0.01);
             const basePredict =
               lastValue + (Math.random() - 0.5) * meanValue * 0.1;
@@ -305,7 +308,7 @@ const ARIMAForecastingDashboard: React.FC = () => {
               }),
             },
             forecastOrigin: new Date(),
-            horizon: 30,
+            horizon: forecastHorizon,
             metrics: {
               mae: trainedModel.validationMetrics?.mae || Math.abs(trainedModel.residuals.reduce((a, b) => a + Math.abs(b), 0) / trainedModel.residuals.length),
               rmse: trainedModel.validationMetrics?.rmse || Math.sqrt(trainedModel.residuals.reduce((a, b) => a + b * b, 0) / trainedModel.residuals.length),
@@ -1058,7 +1061,7 @@ const ARIMAForecastingDashboard: React.FC = () => {
       {/* Main Content */}
       <Tabs
         activeKey={activeTab}
-        onChange={setActiveTab}
+        onChange={(key) => setActiveTab(key as typeof activeTab)}
         items={tabItems}
         size="large"
       />

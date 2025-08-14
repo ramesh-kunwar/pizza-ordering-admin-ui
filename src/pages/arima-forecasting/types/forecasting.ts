@@ -105,7 +105,7 @@ export interface TrainedModel {
   id: string;
   name: string;
   type: string;
-  params: ARIMAParams;
+  params: ARIMAParams & { forecastHorizon?: number };
   coefficients?: number[];
   residuals: number[];
   fitted: number[];

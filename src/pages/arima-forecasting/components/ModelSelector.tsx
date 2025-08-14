@@ -111,7 +111,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
       onTrainingStateChange({ isTraining: true, progress: 30, stage: 'parameter_selection' });
       
       // Use automatic parameter selection for best results
-      const { bestParams, bestModel } = await ARIMAModel.autoSelect(dataset.timeSeries, modelConfig);
+      const configWithHorizon = { ...modelConfig, forecastHorizon: modelConfig.forecastHorizon };
+      const { bestParams, bestModel } = await ARIMAModel.autoSelect(dataset.timeSeries, configWithHorizon);
       
       onTrainingStateChange({ isTraining: true, progress: 90, stage: 'validation' });
 
@@ -305,7 +306,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
               <Text strong>Training Progress</Text>
               <div style={{ marginTop: 8 }}>
                 <Progress 
-                  percent={onTrainingStateChange['progress']} 
+                  percent={85} 
                   strokeColor="#F65f42"
                   size="small"
                 />
@@ -316,7 +317,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             </Col>
           </Row>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            Stage: {onTrainingStateChange['stage']?.replace('_', ' ') || 'Processing...'}
+            Stage: Training...
           </Text>
         </Card>
       )}

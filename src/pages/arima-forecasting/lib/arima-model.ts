@@ -96,7 +96,7 @@ export class ARIMAModel {
       id: `arima_${this.params.p}_${this.params.d}_${this.params.q}_${Date.now()}`,
       name: `ARIMA(${this.params.p},${this.params.d},${this.params.q})`,
       type: 'ARIMA',
-      params: this.params,
+      params: { ...this.params, forecastHorizon: config.forecastHorizon },
       coefficients: [...this.state.arCoeffs, ...this.state.maCoeffs, this.state.intercept],
       residuals: this.state.residuals,
       fitted: this.state.fitted,
@@ -167,7 +167,7 @@ export class ARIMAModel {
       label: `Forecast ${index + 1}`
     }));
 
-    const metrics = this.calculateValidationMetrics();
+    const metrics = this.calculateValidationMetricsOptimized();
 
     return {
       modelId: `arima_${this.params.p}_${this.params.d}_${this.params.q}`,
@@ -716,35 +716,44 @@ export class ARIMAModel {
     const fitted = this.state.fitted;
     const residuals = this.state.residuals;
     
-    // Get corresponding actual values
-    const startIndex = this.originalData.length - fitted.length;
-    const actual = this.originalData.slice(startIndex);
+    // Use full original data length for proper alignment
+    const actual = this.originalData;
     
-    if (actual.length !== fitted.length) {
-      throw new Error(`Data alignment error: actual=${actual.length}, fitted=${fitted.length}`);
+    // Ensure we have enough fitted values for meaningful metrics
+    if (fitted.length < 10) {
+      throw new Error('Insufficient fitted values for validation metrics');
+    }
+    
+    // Align fitted values with actual values (take the last part that was fitted)
+    const alignedActual = actual.slice(-fitted.length);
+    const alignedFitted = fitted.slice(-fitted.length);
+    const alignedResiduals = residuals.slice(-fitted.length);
+    
+    if (alignedActual.length !== alignedFitted.length) {
+      throw new Error(`Data alignment error: actual=${alignedActual.length}, fitted=${alignedFitted.length}`);
     }
 
-    // Basic metrics
-    const mae = residuals.reduce((sum, r) => sum + Math.abs(r), 0) / residuals.length;
-    const rmse = Math.sqrt(residuals.reduce((sum, r) => sum + r * r, 0) / residuals.length);
+    // Basic metrics using aligned data
+    const mae = alignedResiduals.reduce((sum, r) => sum + Math.abs(r), 0) / alignedResiduals.length;
+    const rmse = Math.sqrt(alignedResiduals.reduce((sum, r) => sum + r * r, 0) / alignedResiduals.length);
     
-    // Calculate R² correctly
-    const actualMean = mean(actual);
-    const totalSumSquares = actual.reduce((sum, val) => sum + (val - actualMean) ** 2, 0);
-    const residualSumSquares = residuals.reduce((sum, r) => sum + r * r, 0);
+    // Calculate R² correctly using aligned data
+    const actualMean = mean(alignedActual);
+    const totalSumSquares = alignedActual.reduce((sum, val) => sum + (val - actualMean) ** 2, 0);
+    const residualSumSquares = alignedResiduals.reduce((sum, r) => sum + r * r, 0);
     
     let r2 = 0;
     if (totalSumSquares > 1e-10) {
-      r2 = 1 - (residualSumSquares / totalSumSquares);
+      r2 = Math.max(-10, 1 - (residualSumSquares / totalSumSquares)); // Cap at -10 for extreme cases
     }
     
-    // Calculate MAPE carefully
+    // Calculate MAPE using aligned data
     let mapeSum = 0;
     let validCount = 0;
     
-    for (let i = 0; i < actual.length; i++) {
-      const actualVal = actual[i];
-      const fittedVal = fitted[i];
+    for (let i = 0; i < alignedActual.length; i++) {
+      const actualVal = alignedActual[i];
+      const fittedVal = alignedFitted[i];
       
       if (Math.abs(actualVal) > 0.001) {
         const ape = Math.abs((actualVal - fittedVal) / actualVal) * 100;
@@ -756,10 +765,11 @@ export class ARIMAModel {
     }
     
     const mape = validCount > 0 ? mapeSum / validCount : 999;
-    const ljungBoxPValue = this.ljungBoxTest(residuals);
+    const ljungBoxPValue = this.ljungBoxTest(alignedResiduals);
 
     console.log(`📊 Model metrics: R²=${r2.toFixed(4)}, MAPE=${mape.toFixed(2)}%, RMSE=${rmse.toFixed(2)}`);
-    console.log(`📊 Data info: TSS=${totalSumSquares.toFixed(2)}, RSS=${residualSumSquares.toFixed(2)}`);
+    console.log(`📊 Data alignment: actual=${alignedActual.length}, fitted=${alignedFitted.length}, residuals=${alignedResiduals.length}`);
+    console.log(`📊 Data info: TSS=${totalSumSquares.toFixed(2)}, RSS=${residualSumSquares.toFixed(2)}, Mean=${actualMean.toFixed(2)}`);
 
     return {
       mae,
@@ -767,10 +777,10 @@ export class ARIMAModel {
       mape: Math.min(mape, 999),
       r2,
       aic: this.calculateAIC(),
-      bic: this.calculateBIC(actual.length),
+      bic: this.calculateBIC(alignedActual.length),
       residualStats: {
-        mean: mean(residuals),
-        std: standardDeviation(residuals),
+        mean: mean(alignedResiduals),
+        std: standardDeviation(alignedResiduals),
         ljungBoxPValue
       }
     };
@@ -921,19 +931,39 @@ export class ARIMAModel {
     const fittedDifferenced = this.state.fitted;
     
     if (this.params.d === 0) {
+      // For non-differenced models, fitted values are already in original scale
       return fittedDifferenced;
     }
     
+    // For differenced models, need to integrate back to original scale
     const n = fittedDifferenced.length;
     const result: number[] = new Array(n);
     
-    let baseValue = this.originalData[this.originalData.length - n - this.params.d] || 0;
+    // Find the appropriate starting value from original data
+    const startIdx = Math.max(0, this.originalData.length - n - this.params.d);
+    let baseValue = startIdx < this.originalData.length ? this.originalData[startIdx] : this.originalData[0];
     
     for (let i = 0; i < n; i++) {
       if (this.params.d === 1) {
+        // First-order undifferencing: cumulative sum
+        if (i === 0) {
+          // First fitted value starts from the last observed value
+          const lastObservedIdx = this.originalData.length - n - 1;
+          baseValue = lastObservedIdx >= 0 ? this.originalData[lastObservedIdx] : this.originalData[0];
+        }
         baseValue += fittedDifferenced[i];
         result[i] = baseValue;
+      } else if (this.params.d === 2) {
+        // Second-order undifferencing (more complex)
+        if (i === 0) {
+          result[i] = baseValue + fittedDifferenced[i];
+        } else if (i === 1) {
+          result[i] = 2 * result[i - 1] - baseValue + fittedDifferenced[i];
+        } else {
+          result[i] = 2 * result[i - 1] - result[i - 2] + fittedDifferenced[i];
+        }
       } else {
+        // Higher order differencing - simplified approach
         result[i] = baseValue + fittedDifferenced[i];
         baseValue = result[i];
       }

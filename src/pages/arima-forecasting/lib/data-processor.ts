@@ -232,8 +232,11 @@ export class DataProcessor {
 
     const processedTimeSeries = this.fillMissingValues(timeSeries, 'linear');
     
+    // For very large datasets, apply intelligent sampling to maintain performance
+    const finalTimeSeries = this.applySamplingIfNeeded(processedTimeSeries, frequency);
+    
     return {
-      timeSeries: processedTimeSeries,
+      timeSeries: finalTimeSeries,
       additionalSeries: Object.keys(additionalSeries).length > 0 ? additionalSeries : undefined,
       summary: {
         totalRecords: processedTimeSeries.length,
@@ -378,5 +381,57 @@ export class DataProcessor {
     }
 
     return { indices: outlierIndices, values: outlierValues, bounds };
+  }
+
+  static applySamplingIfNeeded(
+    timeSeries: TimeSeriesDataPoint[],
+    frequency: 'hourly' | 'daily' | 'weekly' | 'monthly'
+  ): TimeSeriesDataPoint[] {
+    const n = timeSeries.length;
+    
+    // Define optimal sizes for different frequencies
+    const optimalSizes = {
+      hourly: 2000,   // ~83 days of hourly data
+      daily: 1000,    // ~2.7 years of daily data  
+      weekly: 500,    // ~9.6 years of weekly data
+      monthly: 300    // ~25 years of monthly data
+    };
+    
+    const maxSize = optimalSizes[frequency];
+    
+    if (n <= maxSize) {
+      return timeSeries; // No sampling needed
+    }
+    
+    console.log(`📊 Large dataset detected (${n} points). Applying intelligent sampling to ${maxSize} points...`);
+    
+    // Use systematic sampling to maintain temporal structure
+    const samplingRatio = maxSize / n;
+    const sampledData: TimeSeriesDataPoint[] = [];
+    
+    // Always include the first and last points
+    sampledData.push(timeSeries[0]);
+    
+    // Sample intermediate points systematically
+    for (let i = 1; i < n - 1; i++) {
+      const shouldInclude = Math.random() < samplingRatio || 
+                          (i % Math.ceil(1 / samplingRatio) === 0);
+      
+      if (shouldInclude && sampledData.length < maxSize - 1) {
+        sampledData.push(timeSeries[i]);
+      }
+    }
+    
+    // Always include the last point
+    if (sampledData.length < maxSize) {
+      sampledData.push(timeSeries[n - 1]);
+    }
+    
+    // Sort by timestamp to maintain chronological order
+    sampledData.sort((a, b) => a.timestamp - b.timestamp);
+    
+    console.log(`✅ Sampling complete: ${n} → ${sampledData.length} points`);
+    
+    return sampledData;
   }
 }

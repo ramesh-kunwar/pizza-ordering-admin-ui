@@ -142,7 +142,7 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
             angle={-45}
             textAnchor="end"
             height={60}
-            interval="preserveStartEnd"
+            interval={chartData.length > 100 ? Math.ceil(chartData.length / 20) : "preserveStartEnd"}
           />
           <YAxis
             tick={{ fontSize: 12 }}
@@ -242,7 +242,7 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
                 }}
               />
               <span>
-                {forecast.metrics.confidenceLevel || 95}% Confidence Interval
+                95% Confidence Interval
               </span>
             </Space>
           )}
