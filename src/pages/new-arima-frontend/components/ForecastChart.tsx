@@ -1,9 +1,14 @@
-/**
- * Forecast Chart Component
- * Displays ARIMA forecast results with interactive charts
- */
 import React, { useState, useMemo } from "react";
-import { Card, Select, Space, Typography, Row, Col, Button, InputNumber } from "antd";
+import {
+  Card,
+  Select,
+  Space,
+  Typography,
+  Row,
+  Col,
+  Button,
+  InputNumber,
+} from "antd";
 import {
   LineChart,
   Line,
@@ -156,7 +161,7 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
 
   // Handle forecast period change
   const handleForecastPeriodChange = (value: number | string) => {
-    if (value === 'custom') {
+    if (value === "custom") {
       setIsCustomPeriod(true);
       onForecastPeriodChange(customPeriod);
     } else {
@@ -180,7 +185,7 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
         <Space>
           <Text strong>Forecast Period:</Text>
           <Select
-            value={isCustomPeriod ? 'custom' : forecastPeriod}
+            value={isCustomPeriod ? "custom" : forecastPeriod}
             onChange={handleForecastPeriodChange}
             style={{ width: 120 }}
           >
@@ -276,14 +281,14 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
         }}
       >
         <Col span={6}>
-          <Text type="secondary">📘 Historical Data:</Text>
+          <Text type="secondary"> Historical Data:</Text>
           <br />
           <Text strong style={{ color: "#1890ff" }}>
             Blue Line
           </Text>
         </Col>
         <Col span={6}>
-          <Text type="secondary">📕 Forecasted Sales:</Text>
+          <Text type="secondary"> Forecasted Sales:</Text>
           <br />
           <Text strong style={{ color: "#ff4d4f" }}>
             Red Line
