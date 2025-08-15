@@ -3,7 +3,7 @@
  * Displays ARIMA forecast results with interactive charts
  */
 import React, { useState, useMemo } from "react";
-import { Card, Select, Space, Typography, Row, Col, Button } from "antd";
+import { Card, Select, Space, Typography, Row, Col, Button, InputNumber } from "antd";
 import {
   LineChart,
   Line,
@@ -23,8 +23,8 @@ const { Option } = Select;
 
 interface ForecastChartProps {
   session: TrainingSession;
-  forecastPeriod: 7 | 30;
-  onForecastPeriodChange: (period: 7 | 30) => void;
+  forecastPeriod: number;
+  onForecastPeriodChange: (period: number) => void;
   onDownload?: () => void;
 }
 
@@ -34,7 +34,9 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
   onForecastPeriodChange,
   onDownload,
 }) => {
-  // Removed unused state variables - simplified chart display
+  // State for custom forecast period
+  const [isCustomPeriod, setIsCustomPeriod] = useState(false);
+  const [customPeriod, setCustomPeriod] = useState(7);
 
   // Prepare chart data
   const chartData = useMemo(() => {
@@ -152,28 +154,58 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
     return null;
   };
 
-  // Chart controls (simplified)
+  // Handle forecast period change
+  const handleForecastPeriodChange = (value: number | string) => {
+    if (value === 'custom') {
+      setIsCustomPeriod(true);
+      onForecastPeriodChange(customPeriod);
+    } else {
+      setIsCustomPeriod(false);
+      onForecastPeriodChange(Number(value));
+    }
+  };
+
+  // Handle custom period change
+  const handleCustomPeriodChange = (value: number | null) => {
+    if (value && value > 0) {
+      setCustomPeriod(value);
+      onForecastPeriodChange(value);
+    }
+  };
+
+  // Chart controls with custom period option
   const renderControls = () => (
     <Row gutter={16} align="middle">
       <Col>
         <Space>
           <Text strong>Forecast Period:</Text>
           <Select
-            value={forecastPeriod}
-            onChange={onForecastPeriodChange}
+            value={isCustomPeriod ? 'custom' : forecastPeriod}
+            onChange={handleForecastPeriodChange}
             style={{ width: 120 }}
           >
             <Option value={7}>7 days</Option>
             <Option value={30}>30 days</Option>
+            <Option value="custom">Custom</Option>
           </Select>
+          {isCustomPeriod && (
+            <InputNumber
+              min={1}
+              max={365}
+              value={customPeriod}
+              onChange={handleCustomPeriodChange}
+              placeholder="Days"
+              style={{ width: 80 }}
+            />
+          )}
         </Space>
       </Col>
       <Col flex="auto" />
-      {/* <Col>
+      <Col>
         <Button icon={<DownloadOutlined />} onClick={onDownload}>
           Export
         </Button>
-      </Col> */}
+      </Col>
     </Row>
   );
 

@@ -43,23 +43,13 @@ export const router = createBrowserRouter([
           },
           {
             path: "/forecasting",
-            element: <ARIMAForecastingDashboard />,
-          },
-          // {
-          //   path: "/arima-python-forecasting",
-          //   element: <ARIMAPythonForecastingDashboard />,
-          // },
-          {
-            path: "/new-arima-forecasting",
             element: <NewArimaForecastingDashboard />,
+            // element: <ARIMAForecastingDashboard />,
           },
+
           // {
-          //   path: "/lstm-forecasting",
-          //   element: <LSTMForecastingDashboard />,
-          // },
-          // {
-          //   path: "/exponential-smoothing",
-          //   element: <ExponentialSmoothingDashboard />,
+          //   path: "/new-arima-forecasting",
+          //   element: <NewArimaForecastingDashboard />,
           // },
         ],
       },

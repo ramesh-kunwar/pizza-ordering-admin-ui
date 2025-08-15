@@ -1,7 +1,3 @@
-/**
- * New ARIMA Forecasting Dashboard
- * Modern interface for pizza sales forecasting with enhanced UX
- */
 import React, { useState, useCallback } from "react";
 import {
   Layout,
@@ -35,7 +31,7 @@ import type { TrainingSession, TrainingConfig, BackendStatus } from "./types";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
-const { Step } = Steps;
+// Steps component used directly
 
 const NewArimaForecastingDashboard: React.FC = () => {
   const {
@@ -49,7 +45,7 @@ const NewArimaForecastingDashboard: React.FC = () => {
     null
   );
   const [session, setSession] = useState<TrainingSession | null>(null);
-  const [forecastPeriod, setForecastPeriod] = useState<7 | 30>(30);
+  const [forecastPeriod, setForecastPeriod] = useState<number>(30);
   const [error, setError] = useState<string | null>(null);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
@@ -130,7 +126,7 @@ const NewArimaForecastingDashboard: React.FC = () => {
   }, [abortController]);
 
   // Handle forecast period change
-  const handleForecastPeriodChange = useCallback((period: 7 | 30) => {
+  const handleForecastPeriodChange = useCallback((period: number) => {
     setForecastPeriod(period);
   }, []);
 
@@ -225,7 +221,6 @@ const NewArimaForecastingDashboard: React.FC = () => {
               </Text>
             </Space>
             <Space>
-              <Button onClick={handleDownload}>Download Data</Button>
               <Button type="primary" onClick={handleReset}>
                 New Forecast
               </Button>
@@ -251,7 +246,6 @@ const NewArimaForecastingDashboard: React.FC = () => {
         <ForecastTable
           session={session}
           forecastPeriod={forecastPeriod}
-          onForecastPeriodChange={handleForecastPeriodChange}
         />
       </Space>
     );

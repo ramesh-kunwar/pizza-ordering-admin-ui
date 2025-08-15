@@ -49,20 +49,20 @@ const getMenuItems = (role: string) => {
     {
       key: "/forecasting",
       icon: <Icon component={BarChartIcon} />,
-      label: <NavLink to="/forecasting">ARIMA Forecasting</NavLink>,
+      label: <NavLink to="/forecasting">Forecast</NavLink>,
     },
     // {
     //   key: "/arima-python-forecasting",
     //   icon: <Icon component={BarChartIcon} />,
     //   label: <NavLink to="/arima-python-forecasting">ARIMA Python Forecasting</NavLink>,
     // },
-    {
-      key: "/new-arima-forecasting",
-      icon: <Icon component={BarChartIcon} />,
-      label: (
-        <NavLink to="/new-arima-forecasting">🍕 New ARIMA Forecasting</NavLink>
-      ),
-    },
+    // {
+    //   key: "/new-arima-forecasting",
+    //   icon: <Icon component={BarChartIcon} />,
+    //   label: (
+    //     <NavLink to="/new-arima-forecasting">🍕 New ARIMA Forecasting</NavLink>
+    //   ),
+    // },
   ];
 
   if (role === "admin") {

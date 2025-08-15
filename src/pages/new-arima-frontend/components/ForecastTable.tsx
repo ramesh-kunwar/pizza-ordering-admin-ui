@@ -21,18 +21,15 @@ import type { TrainingSession, ForecastTableData } from '../types';
 import { format, parseISO } from 'date-fns';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 interface ForecastTableProps {
   session: TrainingSession;
-  forecastPeriod: 7 | 30;
-  onForecastPeriodChange: (period: 7 | 30) => void;
+  forecastPeriod: number;
 }
 
 const ForecastTable: React.FC<ForecastTableProps> = ({
   session,
   forecastPeriod,
-  onForecastPeriodChange,
 }) => {
   // Prepare table data
   const tableData = useMemo(() => {
@@ -167,19 +164,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({
       }
       extra={
         <Row gutter={16} align="middle">
-          <Col>
-            <Space>
-              <Text strong>Period:</Text>
-              <Select
-                value={forecastPeriod}
-                onChange={onForecastPeriodChange}
-                style={{ width: 120 }}
-              >
-                <Option value={7}>Next 7 days</Option>
-                <Option value={30}>Next 30 days</Option>
-              </Select>
-            </Space>
-          </Col>
+
           <Col>
             <Button
               type="primary"
