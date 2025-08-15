@@ -95,57 +95,28 @@ const ForecastTable: React.FC<ForecastTableProps> = ({
       ),
     },
     {
-      title: 'Lower Bound (95% CI)',
+      title: 'Lower Bound (85% CI)',
       dataIndex: 'lower_bound',
       key: 'lower_bound',
       width: 150,
       align: 'right',
       render: (value: number) => (
         <Text type="secondary">
-          {value.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
+          {Math.round(value).toLocaleString()}
         </Text>
       ),
     },
     {
-      title: 'Upper Bound (95% CI)',
+      title: 'Upper Bound (85% CI)',
       dataIndex: 'upper_bound',
       key: 'upper_bound',
       width: 150,
       align: 'right',
       render: (value: number) => (
         <Text type="secondary">
-          {value.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
+          {Math.round(value).toLocaleString()}
         </Text>
       ),
-    },
-    {
-      title: 'Confidence Range',
-      key: 'confidence_range',
-      width: 200,
-      render: (_, record) => {
-        const range = record.upper_bound - record.lower_bound;
-        const midpoint = (record.upper_bound + record.lower_bound) / 2;
-        const percentage = (range / midpoint) * 100;
-        
-        return (
-          <Space direction="vertical" size="small">
-            <Tooltip title={`Range: ${range.toFixed(2)}`}>
-              <Tag color={percentage > 50 ? 'orange' : percentage > 25 ? 'blue' : 'green'}>
-                ±{percentage.toFixed(1)}%
-              </Tag>
-            </Tooltip>
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              Range: {range.toFixed(2)}
-            </Text>
-          </Space>
-        );
-      },
     },
   ];
 
@@ -289,35 +260,7 @@ const ForecastTable: React.FC<ForecastTableProps> = ({
         className="forecast-table"
       />
 
-      {/* Footer Info */}
-      <div style={{ 
-        marginTop: 16, 
-        padding: '12px 16px', 
-        backgroundColor: '#fafafa', 
-        borderRadius: 6 
-      }}>
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Space>
-              <Text type="secondary">
-                📊 Showing {forecastPeriod} days forecast starting from {tableData.length > 0 ? tableData[0].formatted_date : 'N/A'}
-              </Text>
-              <Text type="secondary">•</Text>
-              <Text type="secondary">
-                {session.future_forecast.confidence_intervals.confidence_level ? 
-                  `${(session.future_forecast.confidence_intervals.confidence_level * 100).toFixed(0)}% confidence intervals` : 
-                  '85% confidence intervals'
-                }
-              </Text>
-            </Space>
-          </Col>
-          <Col>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Generated on {format(new Date(), 'MMM dd, yyyy HH:mm')}
-            </Text>
-          </Col>
-        </Row>
-      </div>
+
     </Card>
   );
 };

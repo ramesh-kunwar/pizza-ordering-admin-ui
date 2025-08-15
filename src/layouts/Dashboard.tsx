@@ -51,15 +51,17 @@ const getMenuItems = (role: string) => {
       icon: <Icon component={BarChartIcon} />,
       label: <NavLink to="/forecasting">ARIMA Forecasting</NavLink>,
     },
-    {
-      key: "/arima-python-forecasting",
-      icon: <Icon component={BarChartIcon} />,
-      label: <NavLink to="/arima-python-forecasting">ARIMA Python Forecasting</NavLink>,
-    },
+    // {
+    //   key: "/arima-python-forecasting",
+    //   icon: <Icon component={BarChartIcon} />,
+    //   label: <NavLink to="/arima-python-forecasting">ARIMA Python Forecasting</NavLink>,
+    // },
     {
       key: "/new-arima-forecasting",
       icon: <Icon component={BarChartIcon} />,
-      label: <NavLink to="/new-arima-forecasting">🍕 New ARIMA Forecasting</NavLink>,
+      label: (
+        <NavLink to="/new-arima-forecasting">🍕 New ARIMA Forecasting</NavLink>
+      ),
     },
   ];
 

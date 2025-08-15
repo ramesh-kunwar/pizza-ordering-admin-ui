@@ -3,17 +3,7 @@
  * Displays ARIMA forecast results with interactive charts
  */
 import React, { useState, useMemo } from "react";
-import {
-  Card,
-  Select,
-  Space,
-  Typography,
-  Row,
-  Col,
-  Switch,
-  Tooltip,
-  Button,
-} from "antd";
+import { Card, Select, Space, Typography, Row, Col, Button } from "antd";
 import {
   LineChart,
   Line,
@@ -23,11 +13,8 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceLine,
-  Area,
-  ComposedChart,
 } from "recharts";
-import { DownloadOutlined, FullscreenOutlined } from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
 import type { TrainingSession, ChartDataPoint } from "../types";
 import { format, parseISO } from "date-fns";
 
@@ -47,9 +34,7 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
   onForecastPeriodChange,
   onDownload,
 }) => {
-  const [showConfidenceInterval, setShowConfidenceInterval] = useState(true);
-  const [showTestData, setShowTestData] = useState(true);
-  const [chartType, setChartType] = useState<"line" | "area">("line");
+  // Removed unused state variables - simplified chart display
 
   // Prepare chart data
   const chartData = useMemo(() => {
@@ -57,7 +42,8 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
 
     // Add historical test data (blue line - actual historical sales)
     // Show more historical context for better balance
-    if (false && showTestData && session.test_forecast) {
+    if (false) {
+      // Always use full historical data
       // Disable test data to show full historical
       session.test_forecast.dates.forEach((date, index) => {
         const actual = Math.round(session.test_forecast.actual_values[index]);
@@ -121,7 +107,7 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
 
     // Sort by timestamp
     return data.sort((a, b) => a.timestamp - b.timestamp);
-  }, [session, forecastPeriod, showTestData]);
+  }, [session, forecastPeriod]);
 
   // Calculate balanced Y-axis domain based on data distribution
   const yAxisDomain = useMemo(() => {
@@ -166,7 +152,7 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
     return null;
   };
 
-  // Chart controls
+  // Chart controls (simplified)
   const renderControls = () => (
     <Row gutter={16} align="middle">
       <Col>
@@ -182,50 +168,12 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
           </Select>
         </Space>
       </Col>
-      <Col>
-        <Space>
-          <Text strong>Chart Type:</Text>
-          <Select
-            value={chartType}
-            onChange={setChartType}
-            style={{ width: 100 }}
-          >
-            <Option value="line">Line</Option>
-            <Option value="area">Area</Option>
-          </Select>
-        </Space>
-      </Col>
-      <Col>
-        <Space>
-          <Tooltip title="Show/hide confidence intervals">
-            <Switch
-              checked={showConfidenceInterval}
-              onChange={setShowConfidenceInterval}
-              checkedChildren="CI"
-              unCheckedChildren="CI"
-            />
-          </Tooltip>
-          <Tooltip title="Show/hide historical sales data">
-            <Switch
-              checked={showTestData}
-              onChange={setShowTestData}
-              checkedChildren="History"
-              unCheckedChildren="History"
-            />
-          </Tooltip>
-        </Space>
-      </Col>
       <Col flex="auto" />
-      <Col>
-        <Space>
-          <Button icon={<DownloadOutlined />} onClick={onDownload}>
-            Export
-          </Button>
-          <Button icon={<FullscreenOutlined />} type="dashed">
-            Fullscreen
-          </Button>
-        </Space>
-      </Col>
+      {/* <Col>
+        <Button icon={<DownloadOutlined />} onClick={onDownload}>
+          Export
+        </Button>
+      </Col> */}
     </Row>
   );
 
@@ -245,28 +193,6 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
       />
       <RechartsTooltip content={<CustomTooltip />} />
       <Legend />
-
-      {/* Confidence interval area */}
-      {showConfidenceInterval && (
-        <>
-          <Area
-            dataKey="upper_ci"
-            stackId="1"
-            stroke="transparent"
-            fill="#1890ff"
-            fillOpacity={0.1}
-            dot={false}
-          />
-          <Area
-            dataKey="lower_ci"
-            stackId="1"
-            stroke="transparent"
-            fill="#fff"
-            fillOpacity={1}
-            dot={false}
-          />
-        </>
-      )}
 
       {/* Historical Sales (blue line) */}
       <Line
@@ -292,59 +218,6 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
     </LineChart>
   );
 
-  // Render area chart
-  const renderAreaChart = () => (
-    <ComposedChart
-      data={chartData}
-      margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-    >
-      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-      <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 12 }} />
-      <YAxis
-        stroke="#666"
-        tick={{ fontSize: 12 }}
-        tickFormatter={(value) => Math.round(value).toLocaleString()}
-        domain={yAxisDomain}
-      />
-      <RechartsTooltip content={<CustomTooltip />} />
-      <Legend />
-
-      {/* Confidence interval */}
-      {showConfidenceInterval && (
-        <Area
-          type="monotone"
-          dataKey="upper_ci"
-          stroke="#1890ff"
-          fill="#1890ff"
-          fillOpacity={0.2}
-          name="95% Confidence Interval"
-        />
-      )}
-
-      {/* Historical Sales area */}
-      {showTestData && (
-        <Area
-          type="monotone"
-          dataKey="actual"
-          stroke="#1890ff"
-          fill="#1890ff"
-          fillOpacity={0.6}
-          name="Historical Sales"
-        />
-      )}
-
-      {/* Forecasted Sales area */}
-      <Area
-        type="monotone"
-        dataKey="predicted"
-        stroke="#ff4d4f"
-        fill="#ff4d4f"
-        fillOpacity={0.4}
-        name="Forecasted Sales"
-      />
-    </ComposedChart>
-  );
-
   return (
     <Card
       title={
@@ -358,9 +231,7 @@ const ForecastChart: React.FC<ForecastChartProps> = ({
       size="default"
     >
       <div style={{ height: 500, width: "100%" }}>
-        <ResponsiveContainer>
-          {chartType === "line" ? renderLineChart() : renderAreaChart()}
-        </ResponsiveContainer>
+        <ResponsiveContainer>{renderLineChart()}</ResponsiveContainer>
       </div>
 
       {/* Chart summary */}

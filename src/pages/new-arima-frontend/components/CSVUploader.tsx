@@ -174,12 +174,12 @@ const CSVUploader: React.FC<CSVUploaderProps> = ({ onFileUpload, loading = false
 
         // Auto-select likely columns
         const dateColumn = info.columns.find(col => 
-          /date|time|timestamp/i.test(col)
-        ) || info.columns[0];
+          /order.*date|date.*order|order_date|orderdate/i.test(col)
+        );
         
         const valueColumn = info.columns.find(col => 
-          /price|revenue|sales|quantity|amount|total|value/i.test(col)
-        ) || info.columns[1];
+          /quantity|total.*price|price.*total|total_price|totalprice/i.test(col)
+        );
 
         // Set form defaults
         form.setFieldsValue({
@@ -376,11 +376,13 @@ const CSVUploader: React.FC<CSVUploaderProps> = ({ onFileUpload, loading = false
                     rules={[{ required: true, message: 'Please select date column' }]}
                   >
                     <Select placeholder="Select date column">
-                      {fileInfo.columns.map(col => (
-                        <Option key={col} value={col}>
-                          {col}
-                        </Option>
-                      ))}
+                      {fileInfo.columns
+                        .filter(col => /order.*date|date.*order|order_date|orderdate/i.test(col))
+                        .map(col => (
+                          <Option key={col} value={col}>
+                            {col}
+                          </Option>
+                        ))}
                     </Select>
                   </Form.Item>
                 </Col>
@@ -391,11 +393,13 @@ const CSVUploader: React.FC<CSVUploaderProps> = ({ onFileUpload, loading = false
                     rules={[{ required: true, message: 'Please select value column' }]}
                   >
                     <Select placeholder="Select value column to forecast">
-                      {fileInfo.columns.map(col => (
-                        <Option key={col} value={col}>
-                          {col}
-                        </Option>
-                      ))}
+                      {fileInfo.columns
+                        .filter(col => /quantity|total.*price|price.*total|total_price|totalprice/i.test(col))
+                        .map(col => (
+                          <Option key={col} value={col}>
+                            {col}
+                          </Option>
+                        ))}
                     </Select>
                   </Form.Item>
                 </Col>

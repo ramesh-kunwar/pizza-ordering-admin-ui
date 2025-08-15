@@ -14,20 +14,11 @@ import {
   message,
   Row,
   Col,
-  Breadcrumb,
   Steps,
-  Divider,
   theme,
   Flex,
 } from "antd";
-import {
-  HomeOutlined,
-  UploadOutlined,
-  BarChartOutlined,
-  DashboardOutlined,
-  RightOutlined,
-} from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { UploadOutlined, BarChartOutlined } from "@ant-design/icons";
 
 // Components
 import CSVUploader from "./components/CSVUploader";
@@ -197,12 +188,10 @@ const NewArimaForecastingDashboard: React.FC = () => {
       items={[
         {
           title: "Upload Data",
-          description: "Upload CSV file and configure settings",
           icon: <UploadOutlined />,
         },
         {
           title: "View Results",
-          description: "Analyze forecast and performance metrics",
           icon: <BarChartOutlined />,
         },
       ]}
@@ -271,23 +260,6 @@ const NewArimaForecastingDashboard: React.FC = () => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Content style={{ padding: "0 24px" }}>
-        {/* Breadcrumb */}
-        <Breadcrumb style={{ margin: "16px 0" }}>
-          <Breadcrumb.Item>
-            <Link to="/">
-              <HomeOutlined />
-            </Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <DashboardOutlined />
-            Dashboard
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <BarChartOutlined />
-            ARIMA Forecasting
-          </Breadcrumb.Item>
-        </Breadcrumb>
-
         {/* Main Content */}
         <div
           style={{
@@ -302,10 +274,6 @@ const NewArimaForecastingDashboard: React.FC = () => {
             <Title level={2} style={{ marginBottom: 8 }}>
               🍕 Pizza Sales Forecasting
             </Title>
-            <Text type="secondary" style={{ fontSize: 16 }}>
-              Upload your sales data to generate accurate ARIMA forecasts with
-              confidence intervals
-            </Text>
           </div>
 
           {/* Backend Status */}
@@ -334,8 +302,7 @@ const NewArimaForecastingDashboard: React.FC = () => {
                   type="secondary"
                   style={{ display: "block", marginBottom: 16 }}
                 >
-                  This may take 1-2 minutes. The model is being optimized for
-                  your data.
+                  This may take a few seconds to minutes.
                 </Text>
                 <Button
                   type="default"
@@ -368,27 +335,7 @@ const NewArimaForecastingDashboard: React.FC = () => {
                 background: "#fafafa",
                 borderStyle: "dashed",
               }}
-            >
-              <Row justify="space-between" align="middle">
-                <Col>
-                  <Space size="large">
-                    <Text type="secondary">
-                      💡 <strong>Tip:</strong> Ensure your CSV has date and
-                      numeric columns
-                    </Text>
-                    <Text type="secondary">
-                      📈 <strong>Best Practice:</strong> Use at least 100+ data
-                      points for better accuracy
-                    </Text>
-                  </Space>
-                </Col>
-                <Col>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Powered by ARIMA Backend v1.0
-                  </Text>
-                </Col>
-              </Row>
-            </Card>
+            ></Card>
           )}
         </div>
       </Content>
