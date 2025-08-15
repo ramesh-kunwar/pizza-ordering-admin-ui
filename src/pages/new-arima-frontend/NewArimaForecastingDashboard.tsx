@@ -13,8 +13,9 @@ import {
   Steps,
   theme,
   Flex,
+
 } from "antd";
-import { UploadOutlined, BarChartOutlined } from "@ant-design/icons";
+import { UploadOutlined, BarChartOutlined, DeleteOutlined } from "@ant-design/icons";
 
 // Components
 import CSVUploader from "./components/CSVUploader";
@@ -239,6 +240,24 @@ const NewArimaForecastingDashboard: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleReset]);
 
+  // Clear all persisted data
+  const handleClearData = useCallback(() => {
+    // Clear all localStorage keys
+    Object.values(STORAGE_KEYS).forEach(key => {
+      saveToLocalStorage(key, null);
+    });
+    
+    // Reset all state
+    setCurrentStep(0);
+    setSession(null);
+    setError(null);
+    setForecastPeriod(30);
+    
+    message.success('Data cleared!');
+  }, [STORAGE_KEYS, saveToLocalStorage]);
+
+
+
   // Render backend status
   const renderBackendStatus = () => {
     if (!backendStatus) return null;
@@ -313,6 +332,14 @@ const NewArimaForecastingDashboard: React.FC = () => {
               <Button type="primary" onClick={handleReset}>
                 New Forecast
               </Button>
+              <Button 
+                type="text" 
+                danger 
+                icon={<DeleteOutlined />}
+                onClick={handleClearData}
+              >
+                Clear Data
+              </Button>
             </Space>
           </Flex>
         </Card>
@@ -354,9 +381,24 @@ const NewArimaForecastingDashboard: React.FC = () => {
         >
           {/* Header */}
           <div style={{ marginBottom: 24 }}>
-            <Title level={2} style={{ marginBottom: 8 }}>
-              🍕 Pizza Sales Forecasting
-            </Title>
+            <Row justify="space-between" align="middle">
+              <Col>
+                <Title level={2} style={{ marginBottom: 8 }}>
+                  🍕 Pizza Sales Forecasting
+                </Title>
+              </Col>
+              <Col>
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={handleClearData}
+                  size="small"
+                >
+                  Clear Data
+                </Button>
+              </Col>
+            </Row>
           </div>
 
           {/* Backend Status */}
