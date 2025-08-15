@@ -1,0 +1,117 @@
+New ARIMA Frontend Styles
+
+/* Table row alternating colors */
+.table-row-light {
+  background-color: #fafafa;
+}
+
+.table-row-dark {
+  background-color: #ffffff;
+}
+
+/* Hover effects for table rows */
+.ant-table-tbody > tr:hover > td {
+  background-color: #e6f7ff !important;
+}
+
+/* Chart container improvements */
+.forecast-chart-container {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Performance metric cards */
+.performance-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.performance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Upload area enhancements */
+.ant-upload-drag {
+  border-radius: 12px !important;
+  transition: all 0.3s ease;
+}
+
+.ant-upload-drag:hover {
+  border-color: #1890ff !important;
+  background-color: #f0f8ff !important;
+}
+
+/* Loading spinner customization */
+.forecast-loading {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+/* Success state animations */
+.success-bounce {
+  animation: bounce 0.6s ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Grade badge styles */
+.grade-a { background: linear-gradient(135deg, #52c41a, #73d13d); }
+.grade-b { background: linear-gradient(135deg, #1890ff, #40a9ff); }
+.grade-c { background: linear-gradient(135deg, #faad14, #ffc53d); }
+.grade-d { background: linear-gradient(135deg, #f5222d, #ff4d4f); }
+
+/* Chart tooltip customization */
+.recharts-tooltip-wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .forecast-chart-container {
+    margin: 0 -16px;
+  }
+  
+  .ant-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .table-row-light {
+    background-color: #1f1f1f;
+  }
+  
+  .table-row-dark {
+    background-color: #141414;
+  }
+}
+
+/* Animation for step transitions */
+.step-transition {
+  animation: slideIn 0.5s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

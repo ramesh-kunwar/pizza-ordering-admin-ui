@@ -1,8 +1,7 @@
 import React from "react";
-import { Card, Typography, Switch, Space } from "antd";
-import { LineChartOutlined } from "@ant-design/icons";
+import { Card, Typography, Switch, Space, Statistic, Row, Col } from "antd";
+import { LineChartOutlined, RiseOutlined } from "@ant-design/icons";
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -14,7 +13,6 @@ import {
   Area,
   ComposedChart,
 } from "recharts";
-import { format } from "date-fns";
 import type { TimeSeriesDataPoint, ForecastResult } from "../types/forecasting";
 // import { TimeSeriesDataPoint, ForecastResult } from '../types/forecasting';
 
@@ -22,7 +20,6 @@ const { Title } = Typography;
 
 interface ForecastChartProps {
   timeSeries: TimeSeriesDataPoint[];
-  additionalSeries?: { [field: string]: TimeSeriesDataPoint[] };
   forecast: ForecastResult;
   showConfidenceInterval?: boolean;
   primaryField: string;
@@ -30,12 +27,24 @@ interface ForecastChartProps {
 
 export const ForecastChart: React.FC<ForecastChartProps> = ({
   timeSeries,
-  additionalSeries,
   forecast,
   showConfidenceInterval = true,
   primaryField,
 }) => {
   const [showCI, setShowCI] = React.useState(showConfidenceInterval);
+  
+  // Calculate insights for sales quantity
+  const isQuantityField = primaryField === 'quantity';
+  const forecastStats = React.useMemo(() => {
+    if (!isQuantityField) return null;
+    
+    const totalForecast = forecast.predictions.reduce((sum, p) => sum + p.value, 0);
+    const avgDaily = totalForecast / forecast.predictions.length;
+    const maxDaily = Math.max(...forecast.predictions.map(p => p.value));
+    const minDaily = Math.min(...forecast.predictions.map(p => p.value));
+    
+    return { totalForecast, avgDaily, maxDaily, minDaily };
+  }, [forecast, isQuantityField]);
 
   // Combine historical and forecast data for the chart
   const chartData = React.useMemo(() => {
@@ -104,27 +113,77 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
   };
 
   // Find the point where forecast starts
-  const forecastStartIndex = timeSeries.length - 1;
   const forecastStartDate =
     timeSeries[timeSeries.length - 1]?.date.toLocaleDateString();
 
   return (
-    <Card
-      title={
-        <Space>
-          <LineChartOutlined />
-          <Title level={4} style={{ margin: 0 }}>
-            Time Series Forecast
-          </Title>
-        </Space>
-      }
-      extra={
-        <Space>
-          <span>Confidence Intervals:</span>
-          <Switch checked={showCI} onChange={setShowCI} size="small" />
-        </Space>
-      }
-    >
+    <div>
+      {/* Sales Quantity Insights */}
+      {isQuantityField && forecastStats && (
+        <Card 
+          title={
+            <Space>
+              <RiseOutlined />
+              <Typography.Title level={5} style={{ margin: 0 }}>
+                Sales Quantity Forecast Insights
+              </Typography.Title>
+            </Space>
+          }
+          style={{ marginBottom: 16 }}
+        >
+          <Row gutter={16}>
+            <Col span={6}>
+              <Statistic
+                title="Total Forecast"
+                value={Math.round(forecastStats.totalForecast)}
+                suffix="units"
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Col>
+            <Col span={6}>
+              <Statistic
+                title="Daily Average"
+                value={Math.round(forecastStats.avgDaily)}
+                suffix="units/day"
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Col>
+            <Col span={6}>
+              <Statistic
+                title="Peak Day"
+                value={Math.round(forecastStats.maxDaily)}
+                suffix="units"
+                valueStyle={{ color: '#fa8c16' }}
+              />
+            </Col>
+            <Col span={6}>
+              <Statistic
+                title="Lowest Day"
+                value={Math.round(forecastStats.minDaily)}
+                suffix="units"
+                valueStyle={{ color: '#722ed1' }}
+              />
+            </Col>
+          </Row>
+        </Card>
+      )}
+      
+      <Card
+        title={
+          <Space>
+            <LineChartOutlined />
+            <Title level={4} style={{ margin: 0 }}>
+              {isQuantityField ? 'Sales Quantity Forecast' : 'Time Series Forecast'}
+            </Title>
+          </Space>
+        }
+        extra={
+          <Space>
+            <span>Confidence Intervals:</span>
+            <Switch checked={showCI} onChange={setShowCI} size="small" />
+          </Space>
+        }
+      >
       <ResponsiveContainer width="100%" height={500}>
         <ComposedChart
           data={chartData}
@@ -249,5 +308,6 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({
         </Space>
       </div>
     </Card>
+    </div>
   );
 };

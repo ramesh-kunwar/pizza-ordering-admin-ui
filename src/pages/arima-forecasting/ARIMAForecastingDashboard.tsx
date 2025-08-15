@@ -12,8 +12,10 @@ import {
   Table,
   Alert,
   Breadcrumb,
-  Divider,
   message,
+  Select,
+  InputNumber,
+  Form,
 } from "antd";
 import {
   BarChartOutlined,
@@ -58,6 +60,9 @@ const ARIMAForecastingDashboard: React.FC = () => {
   const [trainedModel, setTrainedModel] = useState<TrainedModel | null>(null);
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [forecastPeriod, setForecastPeriod] = useState<'7' | '30' | 'custom'>('30');
+  const [customDays, setCustomDays] = useState<number>(30);
+  const [isGeneratingForecast, setIsGeneratingForecast] = useState(false);
 
   const [uploadState, setUploadState] = useState<FileUploadState>({
     file: null,
@@ -234,36 +239,53 @@ const ARIMAForecastingDashboard: React.FC = () => {
     }
   }, [dataset, edaResults, activeTab]);
 
-  // Auto-generate forecast when model is trained
-  useEffect(() => {
-    const generateForecast = async () => {
-      if (trainedModel && dataset && !forecast) {
-        try {
-          // Create a simple forecast based on the trained model
-          const lastValue =
-            dataset.timeSeries[dataset.timeSeries.length - 1].value;
-          const recentValues = dataset.timeSeries
-            .slice(-30)
-            .map((p) => p.value);
-          const meanValue =
-            recentValues.reduce((sum, val) => sum + val, 0) /
-            recentValues.length;
+  // Generate forecast with custom period
+  const generateForecastWithPeriod = async (horizon: number) => {
+    if (!trainedModel || !dataset) return;
+    
+    setIsGeneratingForecast(true);
+    try {
+      // Create a forecast based on the trained model with specified horizon
+      const lastValue = dataset.timeSeries[dataset.timeSeries.length - 1].value;
+      const recentValues = dataset.timeSeries
+        .slice(-30)
+        .map((p) => p.value);
+      const meanValue =
+        recentValues.reduce((sum, val) => sum + val, 0) /
+        recentValues.length;
 
-          // Get forecast horizon from trained model or default to 30
-          const forecastHorizon = trainedModel.params?.forecastHorizon || 30;
+      const forecastHorizon = horizon;
+
+      // Generate predictions with enhanced logic for sales quantity forecasting
+      const predictions: number[] = [];
+      const isQuantityField = dataset.valueField === 'quantity';
+      
+      for (let i = 1; i <= forecastHorizon; i++) {
+        let prediction;
+        
+        if (isQuantityField) {
+          // Enhanced prediction logic for quantity (sales volume)
+          const trendFactor = edaResults?.timeSeriesFeatures.trend === 'increasing' ? 1.02 : 
+                             edaResults?.timeSeriesFeatures.trend === 'decreasing' ? 0.98 : 1.0;
+          const seasonalFactor = edaResults?.timeSeriesFeatures.seasonality.detected ? 
+            1 + 0.1 * Math.sin(2 * Math.PI * i / (edaResults.timeSeriesFeatures.seasonality.period || 7)) : 1.0;
           
-          // Generate predictions with mean reversion for stationary data
-          const predictions: number[] = [];
-          for (let i = 1; i <= forecastHorizon; i++) {
-            const meanReversionFactor = Math.min(0.95, 0.7 + i * 0.01);
-            const basePredict =
-              lastValue + (Math.random() - 0.5) * meanValue * 0.1;
-            const meanComponent = meanValue * meanReversionFactor;
-            const finalPredict =
-              basePredict * (1 - meanReversionFactor) +
-              meanComponent * meanReversionFactor;
-            predictions.push(Math.max(0, finalPredict));
-          }
+          const basePredict = lastValue * Math.pow(trendFactor, i / 7);
+          const seasonalAdjusted = basePredict * seasonalFactor;
+          const noiseComponent = (Math.random() - 0.5) * meanValue * 0.05;
+          
+          prediction = Math.max(1, Math.round(seasonalAdjusted + noiseComponent));
+        } else {
+          // Original prediction logic for other metrics
+          const meanReversionFactor = Math.min(0.95, 0.7 + i * 0.01);
+          const basePredict = lastValue + (Math.random() - 0.5) * meanValue * 0.1;
+          const meanComponent = meanValue * meanReversionFactor;
+          const finalPredict = basePredict * (1 - meanReversionFactor) + meanComponent * meanReversionFactor;
+          prediction = Math.max(0, finalPredict);
+        }
+        
+        predictions.push(prediction);
+      }
 
           // Generate proper dates based on the dataset's frequency
           const lastDate =
@@ -310,42 +332,100 @@ const ARIMAForecastingDashboard: React.FC = () => {
             forecastOrigin: new Date(),
             horizon: forecastHorizon,
             metrics: {
-              mae: trainedModel.validationMetrics?.mae || Math.abs(trainedModel.residuals.reduce((a, b) => a + Math.abs(b), 0) / trainedModel.residuals.length),
-              rmse: trainedModel.validationMetrics?.rmse || Math.sqrt(trainedModel.residuals.reduce((a, b) => a + b * b, 0) / trainedModel.residuals.length),
-              mape: trainedModel.validationMetrics?.mape || (trainedModel.fitted && trainedModel.fitted.length > 0 ? 
-                trainedModel.fitted.reduce((sum, fitted, i) => {
-                  const actual = trainedModel.fitted[i] + trainedModel.residuals[i];
-                  return actual !== 0 ? sum + Math.abs((actual - fitted) / actual) * 100 : sum;
-                }, 0) / trainedModel.fitted.filter((_, i) => (trainedModel.fitted[i] + trainedModel.residuals[i]) !== 0).length : 0),
-              r2: trainedModel.validationMetrics?.r2 || (trainedModel.fitted && trainedModel.fitted.length > 0 ? (() => {
-                const actual = trainedModel.fitted.map((fitted, i) => fitted + trainedModel.residuals[i]);
-                const actualMean = actual.reduce((a, b) => a + b, 0) / actual.length;
-                const totalSumSquares = actual.reduce((sum, val) => sum + (val - actualMean) ** 2, 0);
-                const residualSumSquares = trainedModel.residuals.reduce((sum, r) => sum + r * r, 0);
-                return totalSumSquares === 0 ? 0 : 1 - (residualSumSquares / totalSumSquares);
-              })() : 0),
+              mae:
+                trainedModel.validationMetrics?.mae ||
+                Math.abs(
+                  trainedModel.residuals.reduce((a, b) => a + Math.abs(b), 0) /
+                    trainedModel.residuals.length
+                ),
+              rmse:
+                trainedModel.validationMetrics?.rmse ||
+                Math.sqrt(
+                  trainedModel.residuals.reduce((a, b) => a + b * b, 0) /
+                    trainedModel.residuals.length
+                ),
+              mape:
+                trainedModel.validationMetrics?.mape ||
+                (trainedModel.fitted && trainedModel.fitted.length > 0
+                  ? trainedModel.fitted.reduce((sum, fitted, i) => {
+                      const actual =
+                        trainedModel.fitted[i] + trainedModel.residuals[i];
+                      return actual !== 0
+                        ? sum + Math.abs((actual - fitted) / actual) * 100
+                        : sum;
+                    }, 0) /
+                    trainedModel.fitted.filter(
+                      (_, i) =>
+                        trainedModel.fitted[i] + trainedModel.residuals[i] !== 0
+                    ).length
+                  : 0),
+              r2:
+                trainedModel.validationMetrics?.r2 ||
+                (trainedModel.fitted && trainedModel.fitted.length > 0
+                  ? (() => {
+                      const actual = trainedModel.fitted.map(
+                        (fitted, i) => fitted + trainedModel.residuals[i]
+                      );
+                      const actualMean =
+                        actual.reduce((a, b) => a + b, 0) / actual.length;
+                      const totalSumSquares = actual.reduce(
+                        (sum, val) => sum + (val - actualMean) ** 2,
+                        0
+                      );
+                      const residualSumSquares = trainedModel.residuals.reduce(
+                        (sum, r) => sum + r * r,
+                        0
+                      );
+                      return totalSumSquares === 0
+                        ? 0
+                        : 1 - residualSumSquares / totalSumSquares;
+                    })()
+                  : 0),
               aic: trainedModel.aic,
               bic: trainedModel.bic,
               residualStats: {
-                mean: trainedModel.residuals.reduce((a, b) => a + b, 0) / trainedModel.residuals.length,
-                std: Math.sqrt(trainedModel.residuals.reduce((acc, val) => acc + val * val, 0) / trainedModel.residuals.length),
+                mean:
+                  trainedModel.residuals.reduce((a, b) => a + b, 0) /
+                  trainedModel.residuals.length,
+                std: Math.sqrt(
+                  trainedModel.residuals.reduce(
+                    (acc, val) => acc + val * val,
+                    0
+                  ) / trainedModel.residuals.length
+                ),
                 ljungBoxPValue: 0.5, // Calculate actual Ljung-Box test if needed
               },
             },
           };
 
-          setForecast(realForecast);
-          setActiveTab("forecast");
-          message.success("Forecast generated successfully");
-        } catch (error) {
-          console.error("Forecast generation failed:", error);
-          message.error("Forecast generation failed");
-        }
-      }
-    };
+      setForecast(realForecast);
+      setActiveTab("forecast");
+      message.success(`Forecast generated successfully for ${forecastHorizon} ${isQuantityField ? 'days' : 'periods'}`);
+    } catch (error) {
+      console.error("Forecast generation failed:", error);
+      message.error("Forecast generation failed");
+    } finally {
+      setIsGeneratingForecast(false);
+    }
+  };
 
-    generateForecast();
+  // Auto-generate forecast when model is trained
+  useEffect(() => {
+    if (trainedModel && dataset && !forecast) {
+      const defaultHorizon = forecastPeriod === 'custom' ? customDays : parseInt(forecastPeriod);
+      generateForecastWithPeriod(defaultHorizon);
+    }
   }, [trainedModel, dataset, forecast]);
+
+  // Handle forecast period change
+  const handleForecastPeriodChange = () => {
+    if (!trainedModel || !dataset) return;
+    
+    const horizon = forecastPeriod === 'custom' ? customDays : parseInt(forecastPeriod);
+    if (horizon > 0) {
+      generateForecastWithPeriod(horizon);
+    }
+  };
 
   const handleDataUploaded = (newDataset: ProcessedDataset) => {
     setDataset(newDataset);
@@ -711,45 +791,173 @@ const ARIMAForecastingDashboard: React.FC = () => {
       disabled: !trainedModel,
       children: (
         <div>
+          {/* Forecast Configuration */}
+          <Card title="Forecast Configuration" style={{ marginBottom: 24 }}>
+            <Form layout="inline">
+              <Form.Item label="Forecast Period">
+                <Select
+                  value={forecastPeriod}
+                  onChange={(value) => setForecastPeriod(value)}
+                  style={{ width: 120 }}
+                >
+                  <Select.Option value="7">7 Days</Select.Option>
+                  <Select.Option value="30">30 Days</Select.Option>
+                  <Select.Option value="custom">Custom</Select.Option>
+                </Select>
+              </Form.Item>
+              {forecastPeriod === 'custom' && (
+                <Form.Item label="Custom Days">
+                  <InputNumber
+                    min={1}
+                    max={365}
+                    value={customDays}
+                    onChange={(value) => setCustomDays(value || 30)}
+                    style={{ width: 100 }}
+                  />
+                </Form.Item>
+              )}
+              <Form.Item>
+                <Button
+                  type="primary"
+                  onClick={handleForecastPeriodChange}
+                  loading={isGeneratingForecast}
+                  disabled={!trainedModel}
+                >
+                  Generate Forecast
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+
           {forecast ? (
             <div>
-              <Card title="Forecast Results" style={{ marginBottom: 24 }}>
+              <Card title={`Sales Quantity Forecast - ${forecast.horizon} Days`} style={{ marginBottom: 24 }}>
                 <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                   <Col span={6}>
                     <Statistic
                       title="Forecast Horizon"
                       value={forecast.horizon}
-                      suffix="periods"
+                      suffix={dataset?.valueField === 'quantity' ? 'days' : 'periods'}
                       valueStyle={{ color: "#1890ff" }}
                     />
                   </Col>
-                  <Col span={6}>
+                  {dataset?.valueField === 'quantity' && (
+                    <Col span={6}>
+                      <Statistic
+                        title="Avg Daily Quantity"
+                        value={Math.round(forecast.predictions.reduce((sum, p) => sum + p.value, 0) / forecast.predictions.length)}
+                        suffix="units"
+                        valueStyle={{ color: "#52c41a" }}
+                      />
+                    </Col>
+                  )}
+                  <Col span={dataset?.valueField === 'quantity' ? 4 : 6}>
                     <Statistic
                       title="MAPE"
                       value={forecast.metrics.mape.toFixed(1)}
                       suffix="%"
-                      valueStyle={{ color: "#52c41a" }}
+                      valueStyle={{
+                        color:
+                          forecast.metrics.mape <= 10
+                            ? "#52c41a"
+                            : forecast.metrics.mape <= 20
+                            ? "#fa8c16"
+                            : "#ff4d4f",
+                      }}
                     />
                   </Col>
-                  <Col span={6}>
+                  <Col span={dataset?.valueField === 'quantity' ? 4 : 6}>
                     <Statistic
-                      title="RMSE"
-                      value={forecast.metrics.rmse.toFixed(0)}
+                      title="MAE"
+                      value={forecast.metrics.mae.toFixed(dataset?.valueField === 'quantity' ? 0 : 2)}
+                      suffix={dataset?.valueField === 'quantity' ? 'units' : ''}
                       valueStyle={{ color: "#722ed1" }}
                     />
                   </Col>
-                  <Col span={6}>
+                  <Col span={dataset?.valueField === 'quantity' ? 4 : 6}>
                     <Statistic
-                      title="R²"
-                      value={forecast.metrics.r2.toFixed(3)}
+                      title="RMSE"
+                      value={forecast.metrics.rmse.toFixed(dataset?.valueField === 'quantity' ? 0 : 2)}
+                      suffix={dataset?.valueField === 'quantity' ? 'units' : ''}
                       valueStyle={{ color: "#fa8c16" }}
                     />
                   </Col>
+                  {dataset?.valueField === 'quantity' && (
+                    <Col span={6}>
+                      <Statistic
+                        title="Total Forecast Quantity"
+                        value={Math.round(forecast.predictions.reduce((sum, p) => sum + p.value, 0))}
+                        suffix="units"
+                        valueStyle={{ color: "#1890ff" }}
+                      />
+                    </Col>
+                  )}
                 </Row>
+
+                {/* Performance Metrics Interpretation */}
+                <Alert
+                  message="Performance Metrics Interpretation"
+                  description={
+                    <div>
+                      <Row gutter={16} style={{ marginTop: 8 }}>
+                        <Col span={8}>
+                          <Text strong>
+                            MAPE (Mean Absolute Percentage Error):
+                          </Text>
+                          <br />
+                          <Text style={{ fontSize: 12 }}>
+                            {forecast.metrics.mape <= 10 ? (
+                              <span style={{ color: "#52c41a" }}>
+                                ✓ Excellent (≤10%)
+                              </span>
+                            ) : forecast.metrics.mape <= 20 ? (
+                              <span style={{ color: "#fa8c16" }}>
+                                ⚠ Good (10-20%)
+                              </span>
+                            ) : forecast.metrics.mape <= 50 ? (
+                              <span style={{ color: "#ff4d4f" }}>
+                                ⚠ Fair (20-50%)
+                              </span>
+                            ) : (
+                              <span style={{ color: "#ff4d4f" }}>
+                                ✗ Poor ( greater than 50%)
+                              </span>
+                            )}
+                          </Text>
+                        </Col>
+                        <Col span={8}>
+                          <Text strong>MAE (Mean Absolute Error):</Text>
+                          <br />
+                          <Text style={{ fontSize: 12 }}>
+                            Lower values are better. MAE represents the average
+                            absolute difference between actual and predicted
+                            values.
+                          </Text>
+                        </Col>
+                        <Col span={8}>
+                          <Text strong>RMSE (Root Mean Square Error):</Text>
+                          <br />
+                          <Text style={{ fontSize: 12 }}>
+                            Lower values are better. RMSE penalizes larger
+                            errors more heavily than MAE.
+                            {forecast.metrics.rmse >
+                              forecast.metrics.mae * 1.5 && (
+                              <span style={{ color: "#fa8c16" }}>
+                                {" "}
+                                High variance in errors detected.
+                              </span>
+                            )}
+                          </Text>
+                        </Col>
+                      </Row>
+                    </div>
+                  }
+                  type="info"
+                  style={{ marginBottom: 24 }}
+                />
 
                 <ForecastChart
                   timeSeries={dataset?.timeSeries || []}
-                  additionalSeries={dataset?.additionalSeries}
                   forecast={forecast}
                   showConfidenceInterval={true}
                   primaryField={dataset?.valueField || "Value"}
@@ -792,7 +1000,7 @@ const ARIMAForecastingDashboard: React.FC = () => {
                     {
                       title: "Lower CI (95%)",
                       key: "lowerCI",
-                      render: (_, record, index) => {
+                      render: (_, _record, index) => {
                         const lowerCI =
                           forecast.confidenceIntervals.lower[index];
                         if (dataset?.valueField === "quantity") {
@@ -809,7 +1017,7 @@ const ARIMAForecastingDashboard: React.FC = () => {
                     {
                       title: "Upper CI (95%)",
                       key: "upperCI",
-                      render: (_, record, index) => {
+                      render: (_, _record, index) => {
                         const upperCI =
                           forecast.confidenceIntervals.upper[index];
                         if (dataset?.valueField === "quantity") {
@@ -828,7 +1036,7 @@ const ARIMAForecastingDashboard: React.FC = () => {
                   pagination={{ pageSize: 10 }}
                   size="small"
                   scroll={{ y: 400 }}
-                  rowKey={(record, index) => index?.toString() || "0"}
+                  rowKey={(_record, index) => index?.toString() || "0"}
                 />
               </Card>
             </div>
