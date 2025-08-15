@@ -38,22 +38,92 @@ const NewArimaForecastingDashboard: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  // State management
-  const [currentStep, setCurrentStep] = useState(0);
+  // Local storage keys
+  const STORAGE_KEYS = {
+    SESSION: 'arima_training_session',
+    CURRENT_STEP: 'arima_current_step',
+    FORECAST_PERIOD: 'arima_forecast_period'
+  };
+
+  // Helper function to safely get from localStorage
+  const getFromLocalStorage = useCallback((key: string, defaultValue: any) => {
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved === null) return defaultValue;
+      
+      if (key === STORAGE_KEYS.SESSION) {
+        return JSON.parse(saved);
+      } else {
+        return parseInt(saved, 10) || defaultValue;
+      }
+    } catch (error) {
+      console.warn(`Error reading from localStorage key "${key}":`, error);
+      return defaultValue;
+    }
+  }, [STORAGE_KEYS]);
+
+  // Initialize state from localStorage with error handling
+  const [currentStep, setCurrentStep] = useState(() => 
+    getFromLocalStorage(STORAGE_KEYS.CURRENT_STEP, 0)
+  );
+  
   const [loading, setLoading] = useState(false);
   const [backendStatus, setBackendStatus] = useState<BackendStatus | null>(
     null
   );
-  const [session, setSession] = useState<TrainingSession | null>(null);
-  const [forecastPeriod, setForecastPeriod] = useState<number>(30);
+  
+  const [session, setSession] = useState<TrainingSession | null>(() => 
+    getFromLocalStorage(STORAGE_KEYS.SESSION, null)
+  );
+  
+  const [forecastPeriod, setForecastPeriod] = useState<number>(() => 
+    getFromLocalStorage(STORAGE_KEYS.FORECAST_PERIOD, 30)
+  );
+  
   const [error, setError] = useState<string | null>(null);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
 
+  // Helper function to safely save to localStorage
+  const saveToLocalStorage = useCallback((key: string, value: any) => {
+    try {
+      if (value === null || value === undefined) {
+        localStorage.removeItem(key);
+      } else if (typeof value === 'object') {
+        localStorage.setItem(key, JSON.stringify(value));
+      } else {
+        localStorage.setItem(key, value.toString());
+      }
+    } catch (error) {
+      console.warn(`Error saving to localStorage key "${key}":`, error);
+    }
+  }, []);
+
+  // Save to localStorage when state changes
+  React.useEffect(() => {
+    saveToLocalStorage(STORAGE_KEYS.CURRENT_STEP, currentStep);
+  }, [currentStep, saveToLocalStorage, STORAGE_KEYS.CURRENT_STEP]);
+
+  React.useEffect(() => {
+    saveToLocalStorage(STORAGE_KEYS.SESSION, session);
+  }, [session, saveToLocalStorage, STORAGE_KEYS.SESSION]);
+
+  React.useEffect(() => {
+    saveToLocalStorage(STORAGE_KEYS.FORECAST_PERIOD, forecastPeriod);
+  }, [forecastPeriod, saveToLocalStorage, STORAGE_KEYS.FORECAST_PERIOD]);
+
   // Check backend status on component mount
   React.useEffect(() => {
     checkBackendHealth();
+    
+    // Show restored session message if data exists
+    const savedSession = localStorage.getItem(STORAGE_KEYS.SESSION);
+    if (savedSession && currentStep === 1) {
+      message.success("Previous session restored! 🔄", 3);
+    }
   }, []);
+
+
 
   // Backend health check
   const checkBackendHealth = async () => {
@@ -148,7 +218,26 @@ const NewArimaForecastingDashboard: React.FC = () => {
     setSession(null);
     setError(null);
     setForecastPeriod(30);
-  }, []);
+    // Clear localStorage
+    saveToLocalStorage(STORAGE_KEYS.SESSION, null);
+    saveToLocalStorage(STORAGE_KEYS.CURRENT_STEP, 0);
+    saveToLocalStorage(STORAGE_KEYS.FORECAST_PERIOD, 30);
+    message.info("Starting new analysis...");
+  }, [STORAGE_KEYS, saveToLocalStorage]);
+
+  // Add keyboard shortcut to clear localStorage (Ctrl+Shift+R)
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'R') {
+        event.preventDefault();
+        handleReset();
+        message.info("Session reset and localStorage cleared! 🧹");
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleReset]);
 
   // Render backend status
   const renderBackendStatus = () => {
