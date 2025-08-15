@@ -381,24 +381,9 @@ const NewArimaForecastingDashboard: React.FC = () => {
         >
           {/* Header */}
           <div style={{ marginBottom: 24 }}>
-            <Row justify="space-between" align="middle">
-              <Col>
-                <Title level={2} style={{ marginBottom: 8 }}>
-                  🍕 Pizza Sales Forecasting
-                </Title>
-              </Col>
-              <Col>
-                <Button
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={handleClearData}
-                  size="small"
-                >
-                  Clear Data
-                </Button>
-              </Col>
-            </Row>
+            <Title level={2} style={{ marginBottom: 8 }}>
+              🍕 Pizza Sales Forecasting
+            </Title>
           </div>
 
           {/* Backend Status */}
